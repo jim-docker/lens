@@ -165,28 +165,29 @@ export class Kubectl {
   }
 
   public async ensureKubectl(): Promise<boolean> {
-    await ensureDir(this.dirname, 0o755)
-    return lockFile.lock(this.dirname).then(async (release) => {
+    let ensured : boolean
+    let release: Function 
+    try {
+      await ensureDir(this.dirname, 0o755)
+      release = await lockFile.lock(this.dirname, {retries: 2})
       logger.debug(`Acquired a lock for ${this.kubectlVersion}`)
       const bundled = await this.checkBundled()
       const isValid = await this.checkBinary(!bundled)
       if (!isValid) {
-        await this.downloadKubectl().catch((error) => {
-          logger.error(error)
-        });
+        await this.downloadKubectl()
       }
-      await this.writeInitScripts().catch((error) => {
-        logger.error("Failed to write init scripts");
-        logger.error(error)
-      })
-      logger.debug(`Releasing lock for ${this.kubectlVersion}`)
-      release()
-      return true
-    }).catch((e) => {
-      logger.error(`Failed to get a lock for ${this.kubectlVersion}`)
+      await this.writeInitScripts()
+      ensured = true
+    } catch(e) {
+      logger.error(`Failed to ensure kubectl ${this.kubectlVersion}`)
       logger.error(e)
-      return false
-    })
+    } finally {
+      if (release) {
+        logger.debug(`Releasing lock for ${this.kubectlVersion}`)
+        release()
+      }
+    }
+    return ensured
   }
 
   public async downloadKubectl() {

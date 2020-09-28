@@ -59,6 +59,7 @@ export class Cluster extends React.Component {
           {!isLoaded && <Spinner center/>}
           {isLoaded && (
             <>
+              <div className="lens-integration-test">Cluster Page</div>
               <ClusterMetrics/>
               <ClusterPieCharts/>
               <ClusterIssues className={cssNames({ wide: isElectron })}/>

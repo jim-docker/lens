@@ -167,8 +167,8 @@ describe("Lens integration tests", () => {
           pages: [ {
             name: "Cluster",
             href: "cluster",
-            expectedSelector: "div.ClusterNoMetrics p",
-            expectedText: "Metrics are not available due"
+            expectedSelector: "div.lens-integration-test",
+            expectedText: "Cluster Page"
           }]
         },
         {

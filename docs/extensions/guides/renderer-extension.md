@@ -280,35 +280,33 @@ WIP below!
 
 ### `clusterFeatures`
 
-Cluster features are Kubernetes resources that can applied and managed to the active cluster. They can be installed/uninstalled from the [cluster settings page](). 
+Cluster features are Kubernetes resources that can be applied and managed to the active cluster. They can be installed/uninstalled from the [cluster settings page](). 
 The following example shows how to add a cluster feature:
 
 ``` typescript
 import { LensRendererExtension } from "@k8slens/extensions"
-import { MetricsFeature } from "./src/metrics-feature"
+import { ExampleFeature } from "./src/example-feature"
 import React from "react"
 
-export default class ClusterMetricsFeatureExtension extends LensRendererExtension {
+export default class ExampleFeatureExtension extends LensRendererExtension {
   clusterFeatures = [
     {
-      title: "Metrics Stack",
+      title: "Example Feature",
       components: {
         Description: () => {
           return (
             <span>
-                Enable timeseries data visualization (Prometheus stack) for your cluster.
-                Install this only if you don't have existing Prometheus stack installed.
-                You can see preview of manifests <a href="https://github.com/lensapp/lens/tree/master/extensions/lens-metrics/resources" target="_blank">here</a>.
-              </span>
+                Enable an example feature.
+            </span>
           )
         }
       },
-      feature: new MetricsFeature()
+      feature: new ExampleFeature()
     }
   ];
 }
 ```
-The `title` and `components.Description` fields appear on the cluster settings page. The cluster feature must extend the abstract class `ClusterFeature.Feature`, and specifically implement the following methods:
+The `title` and `components.Description` fields provide content that appears on the cluster settings page, in the **Features** section. The cluster feature must extend the abstract class `ClusterFeature.Feature`, and specifically implement the following methods:
 
 ``` typescript
   abstract install(cluster: Cluster): Promise<void>;

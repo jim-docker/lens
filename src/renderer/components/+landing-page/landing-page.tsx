@@ -59,7 +59,6 @@ export class LandingPage extends React.Component {
 
     const existingWorkspaces = workspaceStore.enabledWorkspacesList.map(w => ({value: w.name, label: w.name}));
     return (
-      <PageLayout provideBackButtonNavigation={false} className="Workspaces" header={this.getHeader()} headerClass={"box center"}>
         <div className="LandingPage flex auto">
           {showStartupHint && (
             <div className="startup-hint flex column gaps" onMouseEnter={() => this.showHint = false}>
@@ -82,7 +81,6 @@ export class LandingPage extends React.Component {
             <WorkspaceOverview workspace={this.workspace}/>
           </div>
         </div>
-      </PageLayout>
     );
   }
 }

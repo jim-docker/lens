@@ -1,3 +1,4 @@
+import "./workspace-list.scss";
 import "./workspace-cluster-icon.scss";
 
 import React, { Component, Fragment } from "react";
@@ -9,7 +10,7 @@ import { observer } from "mobx-react";
 import { WizardLayout } from "../layout/wizard-layout";
 import { TabLayout } from "../layout/tab-layout";
 import { ItemListLayout, ItemListLayoutProps } from "../item-object-list/item-list-layout";
-import { autobind, stopPropagation } from "../../utils";
+import { autobind, noop, stopPropagation } from "../../utils";
 import { MarkdownViewer } from "../markdown-viewer";
 import { Spinner } from "../spinner";
 import { Button } from "../button";
@@ -17,6 +18,9 @@ import { Select, SelectOption } from "../select";
 import { Badge } from "../badge";
 import { Hashicon } from "@emeraldpay/hashicon-react";
 import { ClusterItem, WorkspaceClusterStore } from "./workspace-cluster.store";
+import { navigate } from "../../navigation";
+import { clusterViewURL } from "../cluster-manager/cluster-view.route";
+import { addClusterURL } from "../+add-cluster";
 
 interface Props {
   workspace: Workspace;
@@ -29,6 +33,19 @@ enum sortBy {
 @observer
 export class WorkspaceOverview extends Component<Props> {
 
+  showCluster = (clusterItem: ClusterItem) => {
+    const clusterId = clusterItem.getId();
+    navigate(clusterViewURL({ params: { clusterId } }));
+  }
+
+  addCluster = () => {
+    navigate(addClusterURL());
+  };
+
+  removeClusters = () => {
+    console.log("removeClusters() called");
+  };
+
   renderInfo() {
     const { workspace } = this.props;
 
@@ -40,7 +57,7 @@ export class WorkspaceOverview extends Component<Props> {
             This is the default workspace. Workspaces are used to organize clusters into logical groups.
           </p>
           <p>
-            A single workspaces contains a list of clusters and their full configuration.
+            A single workspace contains a list of clusters and their full configuration.
           </p>
         </Fragment>
       );
@@ -73,27 +90,37 @@ export class WorkspaceOverview extends Component<Props> {
   render() {
     const { workspace } = this.props;
     const workspaceClusterStore = new WorkspaceClusterStore(workspace.id);
+    workspaceClusterStore.loadAll();
+
+    console.log("rendering workspace:", workspace.name);
 
     return (
       <WizardLayout className="Workspaces" infoPanel={this.renderInfo()}>
         <ItemListLayout 
           renderHeaderTitle={<div>Clusters</div>}
           isClusterScoped
-          className="WorkspaceList" store={workspaceClusterStore}
+          className="WorkspaceList"
+          store={workspaceClusterStore}
           sortingCallbacks={{
               [sortBy.name]: (cluster: ClusterItem) => cluster.getName(),
           }}
           searchFilters={[]}
           renderTableHeader={[
-              { title: "", className: "icon" },
-              { title: "Name", className: "name flex-grow", sortBy: sortBy.name },
+              { title: "", className: "cluster-icon" },
+              { title: "Name", className: "name", sortBy: sortBy.name },
               { title: "Id", className: "id" },
           ]}
           renderTableContents={(item: ClusterItem) => [
               this.getIcon(item),
               item.getName(),
-              item.getId(),
+              item.getId()
           ]}
+          onDetails={this.showCluster}
+          addRemoveButtons={{
+            addTooltip: "Add Cluster",
+            onAdd: this.addCluster,
+//            onRemove: this.removeClusters
+          }}
         />
       </WizardLayout>
     );

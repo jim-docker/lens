@@ -7,53 +7,34 @@ import { Workspace, workspaceStore } from "../../../common/workspace-store";
 import { PageLayout } from "../layout/page-layout"
 import { Select, SelectOption } from "../select";
 import { WorkspaceOverview } from "./workspace-overview"
-import { autobind } from "../../../common/utils";
-
+import { AddWorkspaceDialog } from "./add-workspace-dialog"
 @observer
 export class LandingPage extends React.Component {
   @observable showHint = true;
-  @observable workspace: Workspace;
 
-  currentWorkspace = autorun(() => { this.workspace = workspaceStore.currentWorkspace; })
-
-  @autobind()
-  getHeader() {
-    const onWorkspaceChange = (option: SelectOption) => {
-      const selectedWorkspace = workspaceStore.getByName(option.value);
-
-      if (!selectedWorkspace) {
-        return;
-      }
-
-      workspaceStore.setActive(selectedWorkspace.id);
-    }
-
-    const existingWorkspaces = workspaceStore.enabledWorkspacesList.map(w => ({value: w.name, label: w.name}));
-
-    return (
-      <h2 className="flex row center">
-        <span>Workspace:</span>       
-        <Select
-          options={[{value: "New Workspace", label: "New Workspace..."}, ...existingWorkspaces]}
-          value={this.workspace.name}
-          onChange={onWorkspaceChange}
-        />
-      </h2>
-    );
+  get workspace(): Workspace {
+    return workspaceStore.currentWorkspace;
   }
-
+  
   render() {
     const clusters = clusterStore.getByWorkspaceId(workspaceStore.currentWorkspaceId);
     const noClustersInScope = !clusters.length;
     const showStartupHint = this.showHint && noClustersInScope;
 
     const onWorkspaceChange = (option: SelectOption) => {
+      console.log("option value:", option.value);
+      if (option.value === "New Workspace") {
+        AddWorkspaceDialog.open();
+        return;
+      }
+
       const selectedWorkspace = workspaceStore.getByName(option.value);
 
       if (!selectedWorkspace) {
         return;
       }
 
+      console.log("workspaceStore.setActive(selectedWorkspace.id)");
       workspaceStore.setActive(selectedWorkspace.id);
     }
 
@@ -69,16 +50,17 @@ export class LandingPage extends React.Component {
             </div>
           )}
           <div className="flex column">
-            <div className="flex center">
-              <span>Workspace:</span>       
+            <h2 className="flex center gaps">
+              <span className="box right">Workspace:</span>       
               <Select
                 options={[{value: "New Workspace", label: "New Workspace..."}, ...existingWorkspaces]}
                 value={this.workspace.name}
                 onChange={onWorkspaceChange}
-                className="box grow"
+                className="box left"
               />
-            </div>
+            </h2>
             <WorkspaceOverview workspace={this.workspace}/>
+            <AddWorkspaceDialog/>
           </div>
         </div>
     );

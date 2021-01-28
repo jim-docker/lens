@@ -2,6 +2,7 @@ import { WorkspaceId } from "../../../common/workspace-store";
 import { Cluster } from "../../../main/cluster";
 import { clusterStore } from "../../../common/cluster-store";
 import { ItemStore } from "../../item.store";
+import { autobind } from "../../utils";
 
 export class ClusterItem {
     cluster: Cluster;
@@ -16,6 +17,7 @@ export class ClusterItem {
 }
 
 /** an ItemStore of the clusters belonging to a given workspace */
+@autobind()
 export class WorkspaceClusterStore extends ItemStore<ClusterItem> {
 
     workspaceId: WorkspaceId;
@@ -31,5 +33,26 @@ export class WorkspaceClusterStore extends ItemStore<ClusterItem> {
             clusterItem.cluster = cluster;
             return clusterItem;
         }));
-      }
+    }
+
+    async remove(clusterItem: ClusterItem) {
+        const { cluster } = clusterItem;
+        if (cluster.isManaged) {
+            return;
+        }
+
+        const clusterId = cluster.id;
+        return super.removeItem(clusterItem, async () => {
+            if (clusterStore.activeClusterId === clusterId) {
+                    clusterStore.setActive(null);
+            }
+            clusterStore.removeById(clusterId);
+        });
+    }
+    
+    async removeSelectedItems() {
+        if (!this.selectedItems.length) return;
+        
+        return Promise.all(this.selectedItems.map(this.remove));
+    }
 }

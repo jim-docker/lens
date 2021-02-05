@@ -7,3 +7,4 @@ export type { PageRegistration, RegisteredPage, PageParams, PageComponentProps, 
 export type { PageMenuRegistration, ClusterPageMenuRegistration, PageMenuComponents } from "../registries/page-menu-registry";
 export type { StatusBarRegistration } from "../registries/status-bar-registry";
 export type { ProtocolHandlerRegistration, RouteParams as ProtocolRouteParams, RouteHandler as ProtocolRouteHandler } from "../registries/protocol-handler-registry";
+export type { WorkspaceDetailRegistration } from "../registries/workspace-detail-registry";

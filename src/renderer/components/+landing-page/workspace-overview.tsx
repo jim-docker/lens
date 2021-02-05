@@ -11,6 +11,7 @@ import { kebabCase } from "lodash";
 import { addClusterURL } from "../+add-cluster";
 import { observable, reaction } from "mobx";
 import { workspaceStore } from "../../../common/workspace-store";
+import { workspaceDetailRegistry } from "../../../extensions/registries/workspace-detail-registry";
 
 enum sortBy {
     name = "name",
@@ -45,41 +46,53 @@ export class WorkspaceOverview extends Component {
       return null;
     }
 
+    const workspaceDetails = workspaceDetailRegistry.getItems();
+
     return (
-      <ItemListLayout
-        renderHeaderTitle="Clusters"
-        isClusterScoped
-        isSearchable={false}
-        isSelectable={false}
-        className="WorkspaceOverview"
-        store={workspaceClusterStore}
-        sortingCallbacks={{
-          [sortBy.name]: (item: ClusterItem) => item.name,
-          [sortBy.distribution]: (item: ClusterItem) => item.distribution,
-          [sortBy.version]: (item: ClusterItem) => item.version,
-          [sortBy.online]: (item: ClusterItem) => item.connectionStatus,
-        }}
-        renderTableHeader={[
-          { title: "Name", className: "name", sortBy: sortBy.name },
-          { title: "Distribution", className: "distribution", sortBy: sortBy.distribution },
-          { title: "Version", className: "version", sortBy: sortBy.version },
-          { title: "Status", className: "status", sortBy: sortBy.online },
-        ]}
-        renderTableContents={(item: ClusterItem) => [
-          item.name,
-          item.distribution,
-          item.version,
-          { title: item.connectionStatus, className: kebabCase(item.connectionStatus) }
-        ]}
-        onDetails={this.showCluster}
-        addRemoveButtons={{
-          addTooltip: "Add Cluster",
-          onAdd: () => navigate(addClusterURL()),
-        }}
-        renderItemMenu={(clusterItem: ClusterItem) => (
-          <WorkspaceClusterMenu clusterItem={clusterItem} workspace={workspaceStore.currentWorkspace} workspaceClusterStore={workspaceClusterStore}/>
+      <div className="WorkspaceOverview flex column gaps box grow">
+        <ItemListLayout
+          renderHeaderTitle="Clusters"
+          isClusterScoped
+          isSearchable={false}
+          isSelectable={false}
+          className="WorkspaceClusters"
+          store={workspaceClusterStore}
+          sortingCallbacks={{
+            [sortBy.name]: (item: ClusterItem) => item.name,
+            [sortBy.distribution]: (item: ClusterItem) => item.distribution,
+            [sortBy.version]: (item: ClusterItem) => item.version,
+            [sortBy.online]: (item: ClusterItem) => item.connectionStatus,
+          }}
+          renderTableHeader={[
+            { title: "Name", className: "name", sortBy: sortBy.name },
+            { title: "Distribution", className: "distribution", sortBy: sortBy.distribution },
+            { title: "Version", className: "version", sortBy: sortBy.version },
+            { title: "Status", className: "status", sortBy: sortBy.online },
+          ]}
+          renderTableContents={(item: ClusterItem) => [
+            item.name,
+            item.distribution,
+            item.version,
+            { title: item.connectionStatus, className: kebabCase(item.connectionStatus) }
+          ]}
+          onDetails={this.showCluster}
+          addRemoveButtons={{
+            addTooltip: "Add Cluster",
+            onAdd: () => navigate(addClusterURL()),
+          }}
+          renderItemMenu={(clusterItem: ClusterItem) => (
+            <WorkspaceClusterMenu clusterItem={clusterItem} workspace={workspaceStore.currentWorkspace} workspaceClusterStore={workspaceClusterStore}/>
+          )}
+        />
+        { workspaceDetails.length > 0 && (
+          <>
+            <hr/>
+            <div className="WorkspaceExtensions flex column gaps">
+              {workspaceDetailRegistry.getItems().map(({ components: { Detail } }, index) => <Detail key={index} className="workspace-detail"/>)}
+            </div>
+          </>
         )}
-      />
+      </div>
     );
   }
 }

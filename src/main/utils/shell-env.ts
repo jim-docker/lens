@@ -57,7 +57,7 @@ export async function shellEnv(shell?: string, timeout?: number): Promise<ShellE
 		const shellProcess = spawn(shell || defaultShell, args, { env });
 		const aborter = setTimeout(() => {
 			console.log("killing spawned shell-env, pid ", shellProcess.pid);
-			shellProcess.kill("SIGTERM");
+			shellProcess.kill("SIGKILL");
 		}, timeout);
 		let stdout: string = "";
 		const stderr = [];
@@ -105,7 +105,7 @@ export async function shellEnv(shell?: string, timeout?: number): Promise<ShellE
 			clearTimeout(aborter);
 			console.log("shell exit", { code, signal });
 			console.log("stdout:", stdout);
-			resolve(parseEnv(stdout ?? ""));
+			resolve(stdout ? parseEnv(stdout) : process.env);
 		  })
 		  .on("close", (code, signal) => {
 			console.log("shell close", { code, signal });

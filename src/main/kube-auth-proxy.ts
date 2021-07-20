@@ -27,6 +27,7 @@ import { Kubectl } from "./kubectl";
 import logger from "./logger";
 import * as url from "url";
 import { getPortFrom } from "./utils/get-port";
+import { delay } from "../common/utils";
 
 export interface KubeAuthProxyLog {
   data: string;
@@ -109,11 +110,13 @@ export class KubeAuthProxy {
   }
 
   public async isReady() : Promise<void> {
-    if (this.port) {
-      return waitUntilUsed(this.port, 500, 10000);
-    } else {
-      console.log("port should be defined!!!");
+    while (!this.port) {
+      console.log("waiting for port to be defined!!!");
+      await delay(100);
     }
+
+    console.log("waiting for port to be used!!!");
+    return waitUntilUsed(this.port, 500, 10000);
   }
 
   protected parseError(data: string) {

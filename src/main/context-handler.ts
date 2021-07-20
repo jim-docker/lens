@@ -141,7 +141,6 @@ export class ContextHandler {
   }
 
   async ensureServer() {
-    console.log("ensureServer started");
     if (!this.kubeAuthProxy) {
       const proxyEnv = Object.assign({}, process.env);
 
@@ -149,22 +148,16 @@ export class ContextHandler {
         proxyEnv.HTTPS_PROXY = this.cluster.preferences.httpsProxy;
       }
       this.kubeAuthProxy = new KubeAuthProxy(this.cluster, proxyEnv);
-      await this.kubeAuthProxy.run();
-      console.log("ensureServer created kubeAuthProxy");
+      this.kubeAuthProxy.run();
     }
-    else {
-      console.log("ensureServer waiting for kubeAuthProxy to be ready");
-      await this.kubeAuthProxy.whenReady;
-    }
-    console.log("ensureServer done");
+
+    await this.kubeAuthProxy.whenReady;
   }
 
   stopServer() {
-    console.log("stopServer start");
     this.kubeAuthProxy?.exit();
     this.kubeAuthProxy = undefined;
     this.apiTarget = undefined;
-    console.log("stopServer done");
   }
 
   get proxyLastError(): string {

@@ -60,7 +60,7 @@ export class KubeAuthProxy {
 
   public async run(): Promise<void> {
     if (this.proxyProcess) {
-      return;
+      return this.isReady();
     }
 
     const proxyBin = await this.kubectl.getPath();
@@ -99,11 +99,21 @@ export class KubeAuthProxy {
       onFind: () => this.sendIpcLogMessage({ data: "Authentication proxy started\n" }),
     });
 
+    console.log("Port from kubectl proxy is ", this._port);
+    
     this.proxyProcess.stdout.on("data", (data: any) => {
       this.sendIpcLogMessage({ data: data.toString() });
     });
 
-    return waitUntilUsed(this.port, 500, 10000);
+    return this.isReady();
+  }
+
+  public async isReady() : Promise<void> {
+    if (this.port) {
+      return waitUntilUsed(this.port, 500, 10000);
+    } else {
+      console.log("port should be defined!!!");
+    }
   }
 
   protected parseError(data: string) {
@@ -132,6 +142,7 @@ export class KubeAuthProxy {
   }
 
   public exit() {
+    console.log("KubeAuthProxy.exit() called, proxyProcess is", this.proxyProcess);
     if (!this.proxyProcess) return;
     logger.debug("[KUBE-AUTH]: stopping local proxy", this.cluster.getMeta());
     this.proxyProcess.kill();

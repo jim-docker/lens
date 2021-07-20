@@ -114,6 +114,8 @@ export class ContextHandler {
     await this.ensureServer();
     const path = this.clusterUrl.path !== "/" ? this.clusterUrl.path : "";
 
+    console.log("After ensureServer auth proxy port is ", this.kubeAuthProxy.port);
+    
     return `http://127.0.0.1:${this.kubeAuthProxy.port}${path}`;
   }
 
@@ -139,6 +141,7 @@ export class ContextHandler {
   }
 
   async ensureServer() {
+    console.log("ensureServer started");
     if (!this.kubeAuthProxy) {
       const proxyEnv = Object.assign({}, process.env);
 
@@ -147,13 +150,21 @@ export class ContextHandler {
       }
       this.kubeAuthProxy = new KubeAuthProxy(this.cluster, proxyEnv);
       await this.kubeAuthProxy.run();
+      console.log("ensureServer created kubeAuthProxy");
     }
+    else {
+      console.log("ensureServer waiting for kubeAuthProxy to be ready");
+      await this.kubeAuthProxy.isReady();
+    }
+    console.log("ensureServer done");
   }
 
   stopServer() {
+    console.log("stopServer start");
     this.kubeAuthProxy?.exit();
     this.kubeAuthProxy = undefined;
     this.apiTarget = undefined;
+    console.log("stopServer done");
   }
 
   get proxyLastError(): string {

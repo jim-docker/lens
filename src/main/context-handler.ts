@@ -154,7 +154,7 @@ export class ContextHandler {
     }
     else {
       console.log("ensureServer waiting for kubeAuthProxy to be ready");
-      await this.kubeAuthProxy.isReady();
+      await this.kubeAuthProxy.whenReady;
     }
     console.log("ensureServer done");
   }

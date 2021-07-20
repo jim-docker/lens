@@ -27,7 +27,7 @@ import { Kubectl } from "./kubectl";
 import logger from "./logger";
 import * as url from "url";
 import { getPortFrom } from "./utils/get-port";
-import { delay } from "../common/utils";
+import { makeObservable, observable, when } from "mobx";
 
 export interface KubeAuthProxyLog {
   data: string;
@@ -48,8 +48,11 @@ export class KubeAuthProxy {
   protected env: NodeJS.ProcessEnv = null;
   protected proxyProcess: ChildProcess;
   protected kubectl: Kubectl;
+  @observable protected ready: boolean;
 
   constructor(cluster: Cluster, env: NodeJS.ProcessEnv) {
+    makeObservable(this);
+    this.ready = false;
     this.env = env;
     this.cluster = cluster;
     this.kubectl = Kubectl.bundled();
@@ -59,9 +62,13 @@ export class KubeAuthProxy {
     return url.parse(this.cluster.apiUrl).hostname;
   }
 
+  get whenReady() {
+    return when(() => this.ready);
+  }
+
   public async run(): Promise<void> {
     if (this.proxyProcess) {
-      return this.isReady();
+      return this.whenReady;
     }
 
     const proxyBin = await this.kubectl.getPath();
@@ -101,22 +108,16 @@ export class KubeAuthProxy {
     });
 
     console.log("Port from kubectl proxy is ", this._port);
-    
+
     this.proxyProcess.stdout.on("data", (data: any) => {
       this.sendIpcLogMessage({ data: data.toString() });
     });
 
-    return this.isReady();
-  }
+    await waitUntilUsed(this.port, 500, 10000);
+  
+    this.ready = true;
 
-  public async isReady() : Promise<void> {
-    while (!this.port) {
-      console.log("waiting for port to be defined!!!");
-      await delay(100);
-    }
-
-    console.log("waiting for port to be used!!!");
-    return waitUntilUsed(this.port, 500, 10000);
+    return this.whenReady;
   }
 
   protected parseError(data: string) {
@@ -146,6 +147,7 @@ export class KubeAuthProxy {
 
   public exit() {
     console.log("KubeAuthProxy.exit() called, proxyProcess is", this.proxyProcess);
+    this.ready = false;
     if (!this.proxyProcess) return;
     logger.debug("[KUBE-AUTH]: stopping local proxy", this.cluster.getMeta());
     this.proxyProcess.kill();
